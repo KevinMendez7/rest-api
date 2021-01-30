@@ -24,6 +24,9 @@ const server = http.createServer((req, res) => {
     .replace(/&/g, '","')
     .replace(/=/g,'":"') + '"}')
 
+    // Get headers as an object
+    const headers = req.headers
+
     // Get the HTTP method
     const method = req.method.toLowerCase()
     
@@ -31,8 +34,7 @@ const server = http.createServer((req, res) => {
     res.end('hello world\n')
 
     // Log the request path
-    console.log(`Request received on path: ${trimmedPath} and method ${method} with query object params`, queryStringObject)
-    // console.log('Request received on path:' +trimmedPath +' and method' + method+ 'with query object params', queryStringObject)
+    console.log('headers ', headers)    
 
 })    
 
