@@ -5,7 +5,8 @@
 
 // Dependencies
 const http = require('http')
-const { StringDecoder } = require('string_decoder')
+const { StringDecoder } = require('string_decoder');
+const { callbackify } = require('util');
 
 
 // Server should respond all request with a string
@@ -42,11 +43,38 @@ const server = http.createServer((req, res) => {
 
         buffer += decoder.end()
 
-        // Send the response
-        res.end('hello world\n')
-    
-        // Log the request path
-        console.log('body is ', buffer)    
+        // Choose the handler this request should go to, if is not found use not found handler
+
+        const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notfound
+
+        const data = {
+            trimmedPath,
+            queryStringObject,
+            method,
+            headers,
+            payload : buffer
+        }
+
+        // Route the request to the handler specified in the router
+        chosenHandler(data, (statusCode, payload) => {
+
+            // Use the status code called back by the handler or default to 200
+            statusCode = typeof(statusCode) == 'number' ? statusCode : 200
+
+            //Use the payload called back by the handler or default to empty
+
+            payload = typeof(payload) == 'object' ? payload : {}
+
+            // Convert the payload to a string
+            const payloadString = JSON.stringify(payload)
+
+            // Return the response
+            res.writeHead(statusCode)
+            res.end(payloadString)
+
+            // Log the request path
+            console.log('returning this ', statusCode, payloadString)    
+        })                    
 
     })    
 
@@ -55,3 +83,25 @@ const server = http.createServer((req, res) => {
 
 // Start the server
 server.listen(3000, () => console.log('listening on port 3000'))
+
+// Define handlers
+let handlers = {}
+
+
+// Sample handlers
+handlers.sample = (data, cb) => {
+    // Callback a http status code and a payload objecy
+    cb(406, {'name' : 'sample handler'})
+}
+
+
+// Not found handler 
+handlers.notfound = (data, cb) => {
+    // Callback a http status code
+    cb(404)
+}
+
+// Define a request router
+const router = {
+    'sample' : handlers.sample
+}
