@@ -20,12 +20,13 @@ const server = http.createServer((req, res) => {
     // Get the path
     const path = parsedURL.pathname
     const trimmedPath = path.replace(/^\/+|\/+$/g,'')
-
-    // Get the query strings as an object
-    const queryStringObject = JSON.parse('{"' + decodeURI(parsedURL.searchParams)
+    const params = parsedURL.searchParams
+    
+    // Get the query strings as an object    
+    const queryStringObject = params.entries.length !== 0 ? JSON.parse('{"' + decodeURI(params)
     .replace(/"/g, '\\"')
     .replace(/&/g, '","')
-    .replace(/=/g,'":"') + '"}')
+    .replace(/=/g,'":"') + '"}') : null
 
     // Get the HTTP method
     const method = req.method.toLowerCase()
@@ -69,7 +70,8 @@ const server = http.createServer((req, res) => {
             const payloadString = JSON.stringify(payload)
 
             // Return the response
-            res.writeHead(statusCode)
+            res.setHeader('Content-Type','application/json')
+            res.writeHead(statusCode)            
             res.end(payloadString)
 
             // Log the request path
