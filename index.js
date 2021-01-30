@@ -5,6 +5,8 @@
 
 // Dependencies
 const http = require('http')
+const { StringDecoder } = require('string_decoder')
+
 
 // Server should respond all request with a string
 const server = http.createServer((req, res) => { 
@@ -24,17 +26,29 @@ const server = http.createServer((req, res) => {
     .replace(/&/g, '","')
     .replace(/=/g,'":"') + '"}')
 
+    // Get the HTTP method
+    const method = req.method.toLowerCase()
+
     // Get headers as an object
     const headers = req.headers
 
-    // Get the HTTP method
-    const method = req.method.toLowerCase()
-    
-    // Send the response
-    res.end('hello world\n')
+    // Get the payload if any
+    const decoder = new StringDecoder('utf-8')
+    var buffer = ''
 
-    // Log the request path
-    console.log('headers ', headers)    
+    req.on('data', data => buffer += decoder.write(data))
+
+    req.on('end', () => {
+
+        buffer += decoder.end()
+
+        // Send the response
+        res.end('hello world\n')
+    
+        // Log the request path
+        console.log('body is ', buffer)    
+
+    })    
 
 })    
 
