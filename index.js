@@ -5,12 +5,29 @@
 
 // Dependencies
 const http = require('http')
+const https = require('https')
+const fs = require('fs')
 const { StringDecoder } = require('string_decoder');
-const { callbackify } = require('util');
+const { httpPort, httpsPort, envName } = require('./config');
 
 
 // Server should respond all request with a string
-const server = http.createServer((req, res) => { 
+const httpServer = http.createServer((req, res) => server(req,res))    
+
+const httpsOptions = {
+    key : fs.readFileSync('./https/key.pem'),
+    cert : fs.readFileSync('./https/cert.pem')
+}
+
+const httpsServer = https.createServer(httpsOptions , (req, res) => server(req,res))    
+
+
+// Start the server
+httpServer.listen(httpPort, () => console.log(`listening on port ${httpPort} and ${envName} mode`))
+
+httpsServer.listen(httpsPort, () => console.log(`listening on port ${httpsPort} and ${envName} mode`))
+
+const server = (req, res) => { 
     
     //Get URL to parse it
     // baseURL was added because URL instance has a bug since localhost is not a valid URL    
@@ -80,20 +97,16 @@ const server = http.createServer((req, res) => {
 
     })    
 
-})    
-
-
-// Start the server
-server.listen(3000, () => console.log('listening on port 3000'))
+}
 
 // Define handlers
 let handlers = {}
 
 
-// Sample handlers
-handlers.sample = (data, cb) => {
-    // Callback a http status code and a payload objecy
-    cb(406, {'name' : 'sample handler'})
+// Ping handlers
+handlers.ping = (data, cb) => {
+    // Callback a http status code and a payload object
+    cb(200)
 }
 
 
@@ -105,5 +118,5 @@ handlers.notfound = (data, cb) => {
 
 // Define a request router
 const router = {
-    'sample' : handlers.sample
+    'ping' : handlers.ping
 }
