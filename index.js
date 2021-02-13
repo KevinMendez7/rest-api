@@ -10,6 +10,13 @@ const fs = require('fs')
 const { StringDecoder } = require('string_decoder');
 const { httpPort, httpsPort, envName } = require('./config');
 
+const _data = require('./lib/data')
+
+// TESTING
+//@TODO 
+
+_data.create('test', 'test', { 'foo' : 'bar'}, (err) => console.log('error was', err))
+
 
 // Server should respond all request with a string
 const httpServer = http.createServer((req, res) => server(req,res))    
