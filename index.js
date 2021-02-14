@@ -8,7 +8,9 @@ const http = require('http')
 const https = require('https')
 const fs = require('fs')
 const { StringDecoder } = require('string_decoder');
-const { httpPort, httpsPort, envName } = require('./config');
+const { httpPort, httpsPort, envName } = require('./lib/config');
+const handlers = require('./lib/handlers');
+const { parseJSONtoObject } = require('./lib/helper');
 
 // Server should respond all request with a string
 const httpServer = http.createServer((req, res) => server(req,res))    
@@ -36,10 +38,10 @@ const server = (req, res) => {
     // Get the path
     const path = parsedURL.pathname
     const trimmedPath = path.replace(/^\/+|\/+$/g,'')
-    const params = parsedURL.searchParams
+    const params = parsedURL.searchParams        
     
     // Get the query strings as an object    
-    const queryStringObject = params.entries.length !== 0 ? JSON.parse('{"' + decodeURI(params)
+    const queryStringObject = params.toString().length !== 0 ? JSON.parse('{"' + decodeURI(params)
     .replace(/"/g, '\\"')
     .replace(/&/g, '","')
     .replace(/=/g,'":"') + '"}') : null
@@ -63,13 +65,13 @@ const server = (req, res) => {
         // Choose the handler this request should go to, if is not found use not found handler
 
         const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notfound
-
+        console.log(queryStringObject)
         const data = {
             trimmedPath,
             queryStringObject,
             method,
             headers,
-            payload : buffer
+            payload : parseJSONtoObject(buffer)
         }
 
         // Route the request to the handler specified in the router
@@ -79,6 +81,8 @@ const server = (req, res) => {
             statusCode = typeof(statusCode) == 'number' ? statusCode : 200
 
             //Use the payload called back by the handler or default to empty
+
+            console.log(payload)
 
             payload = typeof(payload) == 'object' ? payload : {}
 
@@ -98,24 +102,8 @@ const server = (req, res) => {
 
 }
 
-// Define handlers
-let handlers = {}
-
-
-// Ping handlers
-handlers.ping = (data, cb) => {
-    // Callback a http status code and a payload object
-    cb(200)
-}
-
-
-// Not found handler 
-handlers.notfound = (data, cb) => {
-    // Callback a http status code
-    cb(404)
-}
-
 // Define a request router
 const router = {
-    'ping' : handlers.ping
+    'ping' : handlers.ping,
+    'user' : handlers.user
 }
