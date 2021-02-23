@@ -9,7 +9,7 @@ const https = require('https')
 const fs = require('fs')
 const { StringDecoder } = require('string_decoder');
 const { httpPort, httpsPort, envName } = require('./lib/config');
-const handlers = require('./lib/handlers');
+const handler = require('./lib/handler');
 const { parseJSONtoObject } = require('./lib/helper');
 
 // Server should respond all request with a string
@@ -61,17 +61,18 @@ const server = (req, res) => {
     req.on('end', () => {
 
         buffer += decoder.end()
-
+        
         // Choose the handler this request should go to, if is not found use not found handler
 
-        const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notfound
-        console.log(queryStringObject)
+        const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handler.notfound
+        // console.log('queryStringObject')
+        // console.log(queryStringObject)
         const data = {
             trimmedPath,
             queryStringObject,
             method,
             headers,
-            payload : parseJSONtoObject(buffer)
+            payload : parseJSONtoObject(buffer ? buffer : '{}')
         }
 
         // Route the request to the handler specified in the router
@@ -82,7 +83,8 @@ const server = (req, res) => {
 
             //Use the payload called back by the handler or default to empty
 
-            console.log(payload)
+            // console.log('payload')
+            // console.log(payload)
 
             payload = typeof(payload) == 'object' ? payload : {}
 
@@ -104,6 +106,8 @@ const server = (req, res) => {
 
 // Define a request router
 const router = {
-    'ping' : handlers.ping,
-    'user' : handlers.user
+    'ping' : handler.ping,
+    'user' : handler.user,
+    'token' : handler.token,
+    'check' : handler.check
 }
