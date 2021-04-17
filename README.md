@@ -1,2 +1,2 @@
 # rest-api
-RESTfulAPI created just with Node API
+RESTfulAPI checks URL created just with Node API, no dependencies, database simulated by json files
