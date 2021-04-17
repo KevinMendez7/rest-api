@@ -4,6 +4,8 @@
 */
 
 // Dependencies
+const cluster = require('cluster')
+const os = require('os')
 const server = require('./lib/server')
 const worker = require('./lib/worker')
 const cli = require('./lib/cli')
@@ -13,10 +15,10 @@ const app = {}
 
 // Init function
 app.init = (cb) => {
-    // Start the server
-    server.init()
 
-    // Start the workers
+  if(cluster.isMaster) {
+
+    // if it's not in the main thread, Start the background workers and the CLI
     worker.init()
 
     // Start the CLI, but make sure it starts last
@@ -24,6 +26,19 @@ app.init = (cb) => {
         cli.init()
         cb()
     }, 50)
+
+    // Fork the process
+    for(let i = 0; i < os.cpus().length; i ++) {
+      cluster.fork()      
+    }
+
+  } else {
+    // If it's not in the master thread, Start the HTTP server
+    server.init()
+
+  }
+
+    
 }
 
 // Self invoking only if required directly
